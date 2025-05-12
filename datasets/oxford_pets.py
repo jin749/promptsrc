@@ -48,6 +48,9 @@ class OxfordPets(DatasetBase):
                 with open(preprocessed, "wb") as file:
                     pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
+        cfg.defrost()
+        cfg.DATASET.ORIGINAL_NUM_CLASSES = self.get_num_classes(train) ## jin
+        cfg.freeze()
         subsample = cfg.DATASET.SUBSAMPLE_CLASSES
         train, val, test = self.subsample_classes(train, val, test, subsample=subsample)
 
@@ -147,10 +150,10 @@ class OxfordPets(DatasetBase):
             args: a list of datasets, e.g. train, val and test.
             subsample (str): what classes to subsample.
         """
-        assert subsample in ["all", "base", "new"]
+        # assert subsample in ["all", "base", "new"]
 
-        if subsample == "all":
-            return args
+        # if subsample == "all":
+        #     return args
         
         dataset = args[0]
         labels = set()
@@ -163,10 +166,38 @@ class OxfordPets(DatasetBase):
         m = math.ceil(n / 2)
 
         print(f"SUBSAMPLE {subsample.upper()} CLASSES!")
+        # if subsample == "base":
+        #     selected = labels[:m]  # take the first half
+        # else:
+        #     selected = labels[m:]  # take the second half
+        
+        
+        # excluding_class_num = 16
         if subsample == "base":
-            selected = labels[:m]  # take the first half
+            # selected = labels[:m-excluding_class_num] 
+            selected = labels[:m] 
+        elif subsample == "new":
+            selected = labels[m:] 
+        elif subsample == "all":
+            # selected = labels[:m-excluding_class_num] + labels[m:] 
+            selected = labels
+        elif subsample.isdecimal() and len(subsample) == 3: # base with custom ratio
+            print(f"Subsampling {subsample}% classes from base classes")
+            ratio = int(subsample) / 100
+            mb = math.ceil(m * ratio)
+            print(f"Subsampling {mb} classes from base classes")
+            selected = labels[:mb]
+        elif subsample.isdecimal() and len(subsample) == 6: 
+            ratio1 = int(subsample[:3]) / 100
+            ratio2 = int(subsample[3:]) / 100
+            print(f"Subsampling {subsample[:3]}% classes from base classes and {subsample[3:]}% classes from new classes")
+            mb = math.ceil(m * ratio1)
+            mn = math.ceil((n - m) * ratio2)
+            print(f"Subsampling {mb} classes from base classes and {mn} classes from new classes")
+            selected = labels[:mb] + labels[m:m+mn]
         else:
-            selected = labels[m:]  # take the second half
+            raise ValueError(f"Invalid subsample value: {subsample}")
+            
         relabeler = {y: y_new for y_new, y in enumerate(selected)}
         
         output = []
