@@ -8,15 +8,15 @@ TRAINER=PromptSRC
 DATASET=$1
 SEED=$2
 
-CFG=vit_b16_c2_ep20_batch4_4+4ctx
+CFG=vit_b16_c2_ep20_batch4_4+4ctx_vrcls
 SHOTS=16
 LOADEP=20
 SUB=$3
 
 
 COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
-MODEL_DIR=output/base2new/train_base/${COMMON_DIR}
-DIR=output/base2new/test_${SUB}/${COMMON_DIR}
+MODEL_DIR=output/base2new_vrcls/train_base/${COMMON_DIR}
+DIR=output/base2new_vrcls/test_${SUB}/${COMMON_DIR}
 if [ -d "$DIR" ]; then
     echo "Evaluating model"
     echo "Results are available in ${DIR}. Resuming..."

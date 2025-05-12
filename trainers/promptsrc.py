@@ -15,6 +15,16 @@ from .imagenet_templates import IMAGENET_TEMPLATES
 
 _tokenizer = _Tokenizer()
 
+VIRTUAL_CLASSNAMES = {
+    "DescribableTextures": [
+    'mottled', 'veined', 'fringed', 'meshed', 'striated', 'pitted', 'swirled', 'woven', 'ribbed', 'tiled',
+    'netted', 'patched', 'speckled', 'corrugated', 'fractal', 'glossy', 'pebbled', 'scalloped', 'rippled', 'knurled',
+    'frosted', 'gridded', 'etched', 'frayed', 'shimmering', 'quilted', 'spotted', 'twisted', 'looped', 'filigreed',
+    'scuffed', 'bandanaed', 'smeared', 'tessellated', 'beaded', 'corded', 'clumped', 'scaled', 'tufted',
+    'jagged', 'puckered', 'creased', 'beveled', 'pockmarked', 'embroidered', 'embossed', 'latticed', 'warped'
+    ], # 48
+    
+}
 
 def load_clip_to_cpu(cfg, zero_shot_model=False):
     backbone_name = cfg.MODEL.BACKBONE.NAME
@@ -72,7 +82,15 @@ class TextEncoder(nn.Module):
 class VLPromptLearner(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
         super().__init__()
+        # if cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS:
+        #     print("Using virtual classnames")
+        #     vrclassnames = VIRTUAL_CLASSNAMES[cfg.DATASET.NAME]
+        #     # remove duplicates
+        #     for name in vrclassnames:
+        #         if name not in classnames:
+        #             classnames.append(name)
         n_cls = len(classnames)
+        print(f"len={len(classnames)}, {classnames}")
         # Make sure Language depth >= 1
         assert cfg.TRAINER.PROMPTSRC.PROMPT_DEPTH_TEXT >= 1, "In Independent VL prompting, Language prompt depth should be >=1" \
                                                         "\nPlease use VPT trainer if you want to learn only vision " \
@@ -173,6 +191,8 @@ class VLPromptLearner(nn.Module):
 class CustomCLIP(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
         super().__init__()
+        self.orig_n_cls = len(classnames)
+        print(f"Original number of classes: {self.orig_n_cls}")
         self.prompt_learner = VLPromptLearner(cfg, classnames, clip_model)
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
         self.image_encoder = clip_model.visual
@@ -180,7 +200,7 @@ class CustomCLIP(nn.Module):
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
         self.total_epochs = cfg.OPTIM.MAX_EPOCH
-        self.n_cls = len(classnames)
+        # self.n_cls = self.prompt_learner.n_cls
 
     def forward(self, image, label=None):
         tokenized_prompts = self.tokenized_prompts
@@ -203,7 +223,20 @@ class CustomCLIP(nn.Module):
                 zero_shot_features = zero_shot_features / zero_shot_features.norm(dim=-1, keepdim=True)
                 # Compute pre-trained frozen visual features
                 zero_shot_logits = logit_scale * zero_shot_features.cuda() @ fixed_embeddings.half().cuda().t()
+                
+            # return F.cross_entropy(logits, label), text_features, fixed_embeddings, zero_shot_features, \
+            #        image_features, zero_shot_logits, logits
+            '''
+            loss_ce = F.cross_entropy(logits[:, :self.orig_n_cls], label) # jin TODO: remove this
+            text_features = text_features[:self.orig_n_cls]
+            fixed_embeddings = fixed_embeddings[:self.orig_n_cls]
+            # logits[:, :self.orig_n_cls] = logits[:, :self.orig_n_cls] * 1.5
+            zero_shot_logits = zero_shot_logits * zero_shot_logits
+            # breakpoint()
+            '''
 
+            # return loss_ce, text_features, fixed_embeddings, zero_shot_features, \
+            #        image_features, zero_shot_logits, logits
             return F.cross_entropy(logits,
                                    label), text_features, fixed_embeddings, zero_shot_features, \
                    image_features, zero_shot_logits, logits
@@ -310,6 +343,8 @@ class PromptSRC(TrainerX):
                 log_target=True
             ) * (1 * 1) / logits.numel()
             L_SCL = (L_SCL_logits + loss_scl_text + loss_scl_image)
+            if self.cfg.TRAINER.PROMPTSRC.NO_SCL:
+                L_SCL = 0
             loss = (loss_ce + L_SCL)
             optim.zero_grad()
             loss.backward()

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # custom config
-DATA="/path/to/dataset/folder"
+DATA="/hdd/hdd3/jsh/DATA"
 TRAINER=PromptSRC
 
 DATASET=$1

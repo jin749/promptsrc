@@ -123,6 +123,9 @@ def extend_cfg(cfg):
     cfg.TRAINER.PROMPTSRC.GPA_MEAN = 15
     cfg.TRAINER.PROMPTSRC.GPA_STD = 1
     cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
+    
+    cfg.TRAINER.PROMPTSRC.NO_SCL = False  # whether to use SCL
+    cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS = False  # whether to use virtual class
 
     # Config for independent Vision Language prompting (independent-vlp)
     cfg.TRAINER.IVLP = CN()
@@ -134,6 +137,7 @@ def extend_cfg(cfg):
     cfg.TRAINER.IVLP.PROMPT_DEPTH_VISION = 9  # Max 12, minimum 0, for 0 it will act as shallow IVLP prompting (J=1)
     cfg.TRAINER.IVLP.PROMPT_DEPTH_TEXT = 9  # Max 12, minimum 0, for 0 it will act as shallow IVLP prompting(J=1)
     cfg.DATASET.SUBSAMPLE_CLASSES = "all"  # all, base or new
+    
 
 
 def setup_cfg(args):
@@ -172,6 +176,11 @@ def main(args):
     print_args(args, cfg)
     print("Collecting env info ...")
     print("** System info **\n{}\n".format(collect_env_info()))
+    
+    #save cfg
+    import pickle
+    with open(cfg.OUTPUT_DIR + "/cfg.pkl", "wb") as f:
+        pickle.dump(cfg, f)
 
     trainer = build_trainer(cfg)
 
