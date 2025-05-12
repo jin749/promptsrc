@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # custom config
-DATA="/path/to/dataset/folder"
+DATA="/hdd/hdd3/jsh/DATA"
 TRAINER=PromptSRC
 
 DATASET=$1
@@ -14,7 +14,7 @@ SHOTS=16
 DIR=output/base2new/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
 if [ -d "$DIR" ]; then
     echo "Results are available in ${DIR}. Resuming..."
-    python train.py \
+    /hdd/hdd3/jsh/miniconda3/envs/coop/bin/python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \
@@ -25,7 +25,7 @@ if [ -d "$DIR" ]; then
     DATASET.SUBSAMPLE_CLASSES base
 else
     echo "Run this job and save the output to ${DIR}"
-    python train.py \
+    /hdd/hdd3/jsh/miniconda3/envs/coop/bin/python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \

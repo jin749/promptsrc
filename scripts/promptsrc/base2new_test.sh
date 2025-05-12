@@ -2,7 +2,7 @@
 
 
 # custom config
-DATA="/path/to/dataset/folder"
+DATA="/hdd/hdd3/jsh/DATA"
 TRAINER=PromptSRC
 
 DATASET=$1
@@ -11,7 +11,7 @@ SEED=$2
 CFG=vit_b16_c2_ep20_batch4_4+4ctx
 SHOTS=16
 LOADEP=20
-SUB=new
+SUB=$3
 
 
 COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
@@ -21,7 +21,7 @@ if [ -d "$DIR" ]; then
     echo "Evaluating model"
     echo "Results are available in ${DIR}. Resuming..."
 
-    python train.py \
+    /hdd/hdd3/jsh/miniconda3/envs/coop/bin/python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \
@@ -38,7 +38,7 @@ else
     echo "Evaluating model"
     echo "Runing the first phase job and save the output to ${DIR}"
 
-    python train.py \
+    /hdd/hdd3/jsh/miniconda3/envs/coop/bin/python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \
