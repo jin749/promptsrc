@@ -126,6 +126,7 @@ def extend_cfg(cfg):
     
     cfg.TRAINER.PROMPTSRC.NO_SCL = False  # whether to use SCL
     cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS = False  # whether to use virtual class
+    cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE = 100 # + 100 percent of the number of training classes
 
     # Config for independent Vision Language prompting (independent-vlp)
     cfg.TRAINER.IVLP = CN()

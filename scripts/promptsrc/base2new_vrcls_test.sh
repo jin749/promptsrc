@@ -12,11 +12,11 @@ CFG=vit_b16_c2_ep20_batch4_4+4ctx_vrcls
 SHOTS=16
 LOADEP=20
 SUB=$3
-
+PERCENTAGE=$4
 
 COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
-MODEL_DIR=output/base2new_vrcls/train_base/${COMMON_DIR}
-DIR=output/base2new_vrcls/test_${SUB}/${COMMON_DIR}
+MODEL_DIR=output/base2new_vrcls_${PERCENTAGE}/train_base/${COMMON_DIR}
+DIR=output/base2new_vrcls_${PERCENTAGE}/test_${SUB}/${COMMON_DIR}
 if [ -d "$DIR" ]; then
     echo "Evaluating model"
     echo "Results are available in ${DIR}. Resuming..."
@@ -32,7 +32,8 @@ if [ -d "$DIR" ]; then
     --load-epoch ${LOADEP} \
     --eval-only \
     DATASET.NUM_SHOTS ${SHOTS} \
-    DATASET.SUBSAMPLE_CLASSES ${SUB}
+    DATASET.SUBSAMPLE_CLASSES ${SUB} \
+    TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE 0
 
 else
     echo "Evaluating model"
@@ -49,5 +50,6 @@ else
     --load-epoch ${LOADEP} \
     --eval-only \
     DATASET.NUM_SHOTS ${SHOTS} \
-    DATASET.SUBSAMPLE_CLASSES ${SUB}
+    DATASET.SUBSAMPLE_CLASSES ${SUB} \
+    TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE 0
 fi

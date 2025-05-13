@@ -12,18 +12,33 @@ from dassl.optim import build_optimizer, build_lr_scheduler
 from clip import clip
 from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
 from .imagenet_templates import IMAGENET_TEMPLATES
+import math
 
 _tokenizer = _Tokenizer()
 
 VIRTUAL_CLASSNAMES = {
     "DescribableTextures": [
-    'mottled', 'veined', 'fringed', 'meshed', 'striated', 'pitted', 'swirled', 'woven', 'ribbed', 'tiled',
-    'netted', 'patched', 'speckled', 'corrugated', 'fractal', 'glossy', 'pebbled', 'scalloped', 'rippled', 'knurled',
-    'frosted', 'gridded', 'etched', 'frayed', 'shimmering', 'quilted', 'spotted', 'twisted', 'looped', 'filigreed',
-    'scuffed', 'bandanaed', 'smeared', 'tessellated', 'beaded', 'corded', 'clumped', 'scaled', 'tufted',
-    'jagged', 'puckered', 'creased', 'beveled', 'pockmarked', 'embroidered', 'embossed', 'latticed', 'warped'
+        'mottled', 'veined', 'fringed', 'meshed', 'striated', 'pitted', 'swirled', 'woven', 'ribbed', 'tiled',
+        'netted', 'patched', 'speckled', 'corrugated', 'fractal', 'glossy', 'pebbled', 'scalloped', 'rippled', 'knurled',
+        'frosted', 'gridded', 'etched', 'frayed', 'shimmering', 'quilted', 'spotted', 'twisted', 'looped', 'filigreed',
+        'scuffed', 'bandanaed', 'smeared', 'tessellated', 'beaded', 'corded', 'clumped', 'scaled', 'tufted',
+        'jagged', 'puckered', 'creased', 'beveled', 'pockmarked', 'embroidered', 'embossed', 'latticed', 'warped'
     ], # 48
-    
+    "FGVCAircraft": [
+        "707-100", "707-120", "707-700", "717-300", "720B", "727-100", "737-MAX7", "737-MAX8", "737-MAX9",
+        "747-8", "747-SP", "757-100", "757-300F", "767-100", "767-F", "777F", "777-8", "777-9X", "787-8",
+        "787-9", "787-10", "A220-100", "A220-300", "A300-600", "A310-300", "A320neo", "A321neo", "A330neo",
+        "A330-800", "A330-900", "A350-900", "A350-1000", "AH-64 Apache", "An-24", "An-26", "An-72", "BAC 1-11",
+        "BAE Jetstream 31", "Beechcraft King Air", "Beechcraft Super King Air", "Bombardier CS100",
+        "Bombardier CS300", "Bombardier Dash 8", "C-17 Globemaster", "C-5 Galaxy", "Cessna 150", "Cessna 182",
+        "Cessna Citation X", "Cessna Sovereign", "Challenger 300", "Challenger 600", "Cirrus SR20", "Cirrus SR22",
+        "Concorde", "DHC-6 Twin Otter", "DHC-7", "DHC-8", "DC-10", "DC-8", "DC-9", "DC-3", "DC-6", "Do 228",
+        "E-3 Sentry", "E170", "E175", "E190", "E195", "Embraer ERJ135", "Embraer ERJ145", "F-14 Tomcat", 
+        "F-15 Eagle", "F-16 Falcon", "F/A-18 Hornet", "Fokker 100", "Fokker 50", "Fokker 70", "Fokker F27",
+        "Gulfstream G200", "Gulfstream G280", "Gulfstream G450", "Gulfstream G550", "Gulfstream G650",
+        "Il-76", "Il-96", "Jetstream 41", "King Air 350", "Learjet 35", "Learjet 60", "MD-11", "MD-80", 
+        "MD-81", "MD-82", "MD-83", "MD-87", "MD-90", "Piaggio Avanti", "Saab 340", "Saab 2000", "Tu-154"
+    ]
 }
 
 def load_clip_to_cpu(cfg, zero_shot_model=False):
@@ -82,13 +97,22 @@ class TextEncoder(nn.Module):
 class VLPromptLearner(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
         super().__init__()
-        # if cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS:
-        #     print("Using virtual classnames")
-        #     vrclassnames = VIRTUAL_CLASSNAMES[cfg.DATASET.NAME]
-        #     # remove duplicates
-        #     for name in vrclassnames:
-        #         if name not in classnames:
-        #             classnames.append(name)
+        if cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS:
+            print("Using virtual classnames")
+            vrclassnames = VIRTUAL_CLASSNAMES[cfg.DATASET.NAME]
+            # remove duplicates
+            l = len(classnames)
+            p = int(cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE)
+            v = math.ceil(l * p / 100)
+            
+            for name in vrclassnames:
+                if len(classnames) >= l + v:
+                    print(f"{l} classes + {p}% virtual classes = {len(classnames)}")
+                    break
+                if name not in classnames:
+                    classnames.append(name)
+
+
         n_cls = len(classnames)
         print(f"len={len(classnames)}, {classnames}")
         # Make sure Language depth >= 1
@@ -226,20 +250,21 @@ class CustomCLIP(nn.Module):
                 
             # return F.cross_entropy(logits, label), text_features, fixed_embeddings, zero_shot_features, \
             #        image_features, zero_shot_logits, logits
-            '''
+            
             loss_ce = F.cross_entropy(logits[:, :self.orig_n_cls], label) # jin TODO: remove this
-            text_features = text_features[:self.orig_n_cls]
-            fixed_embeddings = fixed_embeddings[:self.orig_n_cls]
+            # text_features = text_features[:self.orig_n_cls]
+            zero_shot_logits = zero_shot_logits[:, :self.orig_n_cls]
+            logits = logits[:, :self.orig_n_cls]
+            # fixed_embeddings = fixed_embeddings[:self.orig_n_cls]
             # logits[:, :self.orig_n_cls] = logits[:, :self.orig_n_cls] * 1.5
-            zero_shot_logits = zero_shot_logits * zero_shot_logits
+            # zero_shot_logits = zero_shot_logits * zero_shot_logits
             # breakpoint()
-            '''
 
-            # return loss_ce, text_features, fixed_embeddings, zero_shot_features, \
-            #        image_features, zero_shot_logits, logits
-            return F.cross_entropy(logits,
-                                   label), text_features, fixed_embeddings, zero_shot_features, \
+            return loss_ce, text_features, fixed_embeddings, zero_shot_features, \
                    image_features, zero_shot_logits, logits
+            # return F.cross_entropy(logits,
+            #                        label), text_features, fixed_embeddings, zero_shot_features, \
+            #        image_features, zero_shot_logits, logits
         else:
             return logits
 
@@ -332,6 +357,14 @@ class PromptSRC(TrainerX):
             # Calculate the L_SCL_text loss
             loss_scl_text = F.l1_loss(normalized_text_features, zs_clip_text_embeddings.cuda(),
                                       reduction='mean') * self.cfg.TRAINER.PROMPTSRC.TEXT_LOSS_WEIGHT
+            # loss_scl_text = F.l1_loss(normalized_text_features, zs_clip_text_embeddings[:self.model.orig_n_cls].cuda(), #jin
+            #                           reduction='mean') * self.cfg.TRAINER.PROMPTSRC.TEXT_LOSS_WEIGHT
+            
+            # contrastive loss between the virtual class and the original class # jin
+            virtual_zs_clip_text_embeddings = zs_clip_text_embeddings.to(normalized_text_features.dtype)
+            sim_matrix = torch.matmul(normalized_text_features[:self.model.orig_n_cls], virtual_zs_clip_text_embeddings[self.model.orig_n_cls:].t())
+            virtual_contrastive_loss = sim_matrix.mean() 
+        
             # Calculate the L_SCL_image loss
             loss_scl_image = F.l1_loss(image_ft, zs_image_embedd.cuda(),
                                        reduction='mean') * self.cfg.TRAINER.PROMPTSRC.IMAGE_LOSS_WEIGHT
@@ -342,7 +375,8 @@ class PromptSRC(TrainerX):
                 reduction='sum',
                 log_target=True
             ) * (1 * 1) / logits.numel()
-            L_SCL = (L_SCL_logits + loss_scl_text + loss_scl_image)
+            # L_SCL = (L_SCL_logits + loss_scl_text + loss_scl_image)
+            L_SCL = (L_SCL_logits + loss_scl_text + loss_scl_image) + virtual_contrastive_loss
             if self.cfg.TRAINER.PROMPTSRC.NO_SCL:
                 L_SCL = 0
             loss = (loss_ce + L_SCL)
