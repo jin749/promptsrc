@@ -15,15 +15,40 @@ from .imagenet_templates import IMAGENET_TEMPLATES
 import math
 
 _tokenizer = _Tokenizer()
+'''
+DescribableTextures(24): -> 50
+['banded', 'blotchy', 'braided', 'bubbly', 'bumpy', 'chequered', 'cobwebbed', 'cracked', 'crosshatched', 'crystalline', 'dotted', 'fibrous', 'flecked', 'freckled', 'frilly', 'gauzy', 'grid', 'grooved', 'honeycombed', 'interlaced', 'knitted', 'lacelike', 'lined', 'marbled']
+FGVCAircraft(50): -> 100
+['707-320', '727-200', '737-200', '737-300', '737-400', '737-500', '737-600', '737-700', '737-800', '737-900', '747-100', '747-200', '747-300', '747-400', '757-200', '757-300', '767-200', '767-300', '767-400', '777-200', '777-300', 'A300B4', 'A310', 'A318', 'A319', 'A320', 'A321', 'A330-200', 'A330-300', 'A340-200', 'A340-300', 'A340-500', 'A340-600', 'A380', 'ATR-42', 'ATR-72', 'An-12', 'BAE 146-200', 'BAE 146-300', 'BAE-125', 'Beechcraft 1900', 'Boeing 717', 'C-130', 'C-47', 'CRJ-200', 'CRJ-700', 'CRJ-900', 'Cessna 172', 'Cessna 208', 'Cessna 525']
+EuroSAT(5): -> 10
+['Annual Crop Land', 'Forest', 'Herbaceous Vegetation Land', 'Highway or Road', 'Industrial Buildings']
+StanfordCars(98): -> 200
+['2000 AM General Hummer SUV', '2012 Acura RL Sedan', '2012 Acura TL Sedan', '2008 Acura TL Type-S', '2012 Acura TSX Sedan', '2001 Acura Integra Type R', '2012 Acura ZDX Hatchback', '2012 Aston Martin V8 Vantage Convertible', '2012 Aston Martin V8 Vantage Coupe', '2012 Aston Martin Virage Convertible', '2012 Aston Martin Virage Coupe', '2008 Audi RS 4 Convertible', '2012 Audi A5 Coupe', '2012 Audi TTS Coupe', '2012 Audi R8 Coupe', '1994 Audi V8 Sedan', '1994 Audi 100 Sedan', '1994 Audi 100 Wagon', '2011 Audi TT Hatchback', '2011 Audi S6 Sedan', '2012 Audi S5 Convertible', '2012 Audi S5 Coupe', '2012 Audi S4 Sedan', '2007 Audi S4 Sedan', '2012 Audi TT RS Coupe', '2012 BMW ActiveHybrid 5 Sedan', '2012 BMW 1 Series Convertible', '2012 BMW 1 Series Coupe', '2012 BMW 3 Series Sedan', '2012 BMW3 Series Wagon', '2007 BMW 6 Series Convertible', '2007 BMW X5 SUV', '2012 BMW X6 SUV', '2012 BMW M3 Coupe', '2010 BMW M5 Sedan', '2010 BMW M6 Convertible', '2012 BMW X3 SUV', '2012 BMW Z4 Convertible', '2012 Bentley Continental Supersports Conv. Convertible', '2009 Bentley Arnage Sedan', '2011 Bentley Mulsanne Sedan', '2012 Bentley Continental GT Coupe', '2007 Bentley Continental GT Coupe', '2007 Bentley Continental Flying Spur Sedan', '2009 Bugatti Veyron 16.4 Convertible', '2009 Bugatti Veyron 16.4 Coupe', '2012 Buick Regal GS', '2007 Buick Rainier SUV', '2012 Buick Verano Sedan', '2012 Buick Enclave SUV', '2012 Cadillac CTS-V Sedan', '2012 Cadillac SRX SUV', '2007 Cadillac Escalade EXT Crew Cab', '2012 Chevrolet Silverado 1500 Hybrid Crew Cab', '2012 Chevrolet Corvette Convertible', '2012 Chevrolet Corvette ZR1', '2007 Chevrolet Corvette Ron Fellows Edition Z06', '2012 Chevrolet Traverse SUV', '2012 Chevrolet Camaro Convertible', '2010 Chevrolet HHR SS', '2007 Chevrolet Impala Sedan', '2012 Chevrolet Tahoe Hybrid SUV', '2012 Chevrolet Sonic Sedan', '2007 Chevrolet Express Cargo Van', '2012 Chevrolet Avalanche Crew Cab', '2010 Chevrolet Cobalt SS', '2010 Chevrolet Malibu HybridSedan', '2009 Chevrolet TrailBlazer SS', '2012 Chevrolet Silverado 2500HD Regular Cab', '2007 Chevrolet Silverado 1500 Classic Extended Cab', '2007 Chevrolet Express Van', '2007 Chevrolet Monte CarloCoupe', '2007 Chevrolet Malibu Sedan', '2012 Chevrolet Silverado 1500 Extended Cab', '2012 Chevrolet Silverado 1500 Regular Cab', '2009 Chrysler Aspen SUV', '2010 Chrysler Sebring Convertible', '2012Chrysler Town and Country Minivan', '2010 Chrysler 300 SRT-8', '2008 Chrysler Crossfire Convertible', '2008 Chrysler PT Cruiser Convertible', '2002 Daewoo Nubira Wagon', '2012 Dodge Caliber Wagon', '2007 Dodge Caliber Wagon', '1997 Dodge Caravan Minivan', '2010 Dodge Ram Pickup 3500 Crew Cab', '2009 Dodge Ram Pickup 3500 Quad Cab', '2009 Dodge Sprinter Cargo Van', '2012 Dodge Journey SUV', '2010 Dodge Dakota Crew Cab', '2007 Dodge Dakota Club Cab', '2008 Dodge Magnum Wagon', '2011 Dodge Challenger SRT8', '2012 Dodge Durango SUV', '2007 Dodge Durango SUV', '2012 Dodge Charger Sedan', '2009 Dodge Charger SRT-8', '1998 Eagle Talon Hatchback']    
+OxfordPets(19) -> 50
+['abyssinian', 'american_bulldog', 'american_pit_bull_terrier', 'basset_hound', 'beagle', 'bengal', 'birman', 'bombay', 'boxer', 'british_shorthair', 'chihuahua', 'egyptian_mau', 'english_cocker_spaniel', 'english_setter', 'german_shorthaired', 'great_pyrenees', 'havanese', 'japanese_chin', 'keeshond']
+OxfordFlowers(51) -> 100
+['pink primrose', 'hard-leaved pocket orchid', 'canterbury bells', 'sweet pea', 'english marigold', 'tiger lily', 'moon orchid', 'bird of paradise', 'monkshood', 'globe thistle', 'snapdragon', "colt's foot", 'king protea', 'spear thistle', 'yellow iris', 'globe-flower', 'purple coneflower', 'peruvian lily', 'balloon flower', 'giant white arum lily', 'fire lily', 'pincushion flower', 'fritillary', 'red ginger', 'grape hyacinth', 'corn poppy', 'prince of wales feathers', 'stemless gentian', 'artichoke', 'sweet william', 'carnation', 'garden phlox', 'love in the mist', 'mexican aster', 'alpine sea holly', 'ruby-lipped cattleya', 'cape flower', 'great masterwort', 'siam tulip', 'lenten rose', 'barbeton daisy', 'daffodil', 'sword lily', 'poinsettia', 'bolero deep blue', 'wallflower', 'marigold', 'buttercup', 'oxeye daisy', 'common dandelion', 'petunia']
+Caltech101(50) -> 100
+['face', 'leopard', 'motorbike', 'accordion', 'airplane', 'anchor', 'ant', 'barrel', 'bass', 'beaver', 'binocular', 'bonsai', 'brain', 'brontosaurus', 'buddha', 'butterfly', 'camera', 'cannon', 'car_side', 'ceiling_fan', 'cellphone', 'chair', 'chandelier', 'cougar_body', 'cougar_face', 'crab', 'crayfish', 'crocodile', 'crocodile_head', 'cup', 'dalmatian', 'dollar_bill', 'dolphin', 'dragonfly', 'electric_guitar', 'elephant', 'emu', 'euphonium', 'ewer', 'ferry', 'flamingo', 'flamingo_head', 'garfield', 'gerenuk', 'gramophone', 'grand_piano', 'hawksbill', 'headphone', 'hedgehog', 'helicopter']
+SUN397(199) -> 400
+['abbey', 'airplane_cabin', 'airport_terminal', 'alley', 'amphitheater', 'amusement_arcade', 'amusement_park', 'anechoic_chamber', 'outdoor apartment_building', 'indoor apse', 'aquarium', 'aqueduct','arch', 'archive', 'outdoor arrival_gate', 'art_gallery', 'art_school', 'art_studio', 'assembly_line', 'outdoor athletic_field', 'public atrium', 'attic', 'auditorium', 'auto_factory', 'badlands', 'indoor badminton_court', 'baggage_claim', 'shop bakery', 'exterior balcony', 'interior balcony', 'ball_pit', 'ballroom', 'bamboo_forest', 'banquet_hall', 'bar', 'barn', 'barndoor', 'baseball_field', 'basement', 'basilica', 'outdoor basketball_court', 'bathroom', 'batters_box', 'bayou', 'indoor bazaar', 'outdoor bazaar', 'beach', 'beauty_salon', 'bedroom', 'berth', 'biology_laboratory', 'indoor bistro', 'boardwalk', 'boat_deck', 'boathouse', 'bookstore', 'indoor booth', 'botanical_garden', 'indoor bow_window', 'outdoor bow_window', 'bowling_alley', 'boxing_ring', 'indoor brewery', 'bridge', 'building_facade', 'bullring', 'burial_chamber', 'bus_interior', 'butchers_shop', 'butte', 'outdoor cabin', 'cafeteria', 'campsite', 'campus', 'natural canal', 'urban canal', 'candy_store', 'canyon', 'backseat car_interior', 'frontseat car_interior', 'carrousel', 'indoor casino', 'castle', 'catacomb', 'indoor cathedral', 'outdoor cathedral', 'indoor cavern', 'cemetery', 'chalet', 'cheese_factory', 'chemistry_lab', 'indoor chicken_coop', 'outdoor chicken_coop', 'childs_room', 'indoor church', 'outdoor church', 'classroom', 'clean_room', 'cliff', 'indoor cloister', 'closet', 'clothing_store', 'coast', 'cockpit', 'coffee_shop', 'computer_room', 'conference_center', 'conference_room', 'construction_site', 'control_room', 'outdoor control_tower', 'corn_field', 'corral', 'corridor', 'cottage_garden', 'courthouse', 'courtroom', 'courtyard', 'exterior covered_bridge', 'creek', 'crevasse', 'crosswalk', 'office cubicle', 'dam', 'delicatessen', 'dentists_office', 'sand desert', 'vegetation desert', 'indoor diner', 'outdoor diner', 'home dinette', 'vehicle dinette', 'dining_car', 'dining_room', 'discotheque', 'dock', 'outdoor doorway', 'dorm_room', 'driveway', 'outdoor driving_range', 'drugstore','electrical_substation', 'door elevator', 'interior elevator', 'elevator_shaft', 'engine_room', 'indoor escalator', 'excavation', 'indoor factory', 'fairway', 'fastfood_restaurant', 'cultivated field', 'wild field', 'fire_escape', 'fire_station', 'indoor firing_range', 'fishpond', 'indoor florist_shop', 'food_court', 'broadleaf forest', 'needleleaf forest', 'forest_path', 'forest_road', 'formal_garden', 'fountain', 'galley', 'game_room', 'indoor garage', 'garbage_dump', 'gas_station', 'exterior gazebo', 'indoor general_store', 'outdoor general_store', 'gift_shop', 'golf_course', 'indoor greenhouse', 'outdoor greenhouse', 'indoor gymnasium', 'indoor hangar', 'outdoor hangar', 'harbor', 'hayfield', 'heliport', 'herb_garden', 'highway', 'hill', 'home_office', 'hospital', 'hospital_room', 'hot_spring', 'outdoor hot_tub', 'outdoor hotel', 'hotel_room', 'house', 'outdoor hunting_lodge', 'ice_cream_parlor', 'ice_floe', 'ice_shelf', 'indoor ice_skating_rink']     
+UCF101(51) -> 100
+['Apply_Eye_Makeup', 'Apply_Lipstick', 'Archery', 'Baby_Crawling', 'Balance_Beam', 'Band_Marching', 'Baseball_Pitch', 'Basketball', 'Basketball_Dunk', 'Bench_Press', 'Biking', 'Billiards', 'Blow_Dry_Hair', 'Blowing_Candles', 'Body_Weight_Squats', 'Bowling', 'Boxing_Punching_Bag', 'Boxing_Speed_Bag', 'Breast_Stroke', 'Brushing_Teeth', 'Clean_And_Jerk', 'Cliff_Diving', 'Cricket_Bowling', 'Cricket_Shot', 'Cutting_In_Kitchen', 'Diving', 'Drumming', 'Fencing', 'Field_Hockey_Penalty', 'Floor_Gymnastics', 'Frisbee_Catch', 'Front_Crawl', 'Golf_Swing', 'Haircut', 'Hammering', 'Hammer_Throw', 'Handstand_Pushups', 'Handstand_Walking', 'Head_Massage', 'High_Jump', 'Horse_Race', 'Horse_Riding', 'Hula_Hoop', 'Ice_Dancing', 'Javelin_Throw', 'Juggling_Balls', 'Jumping_Jack', 'Jump_Rope', 'Kayaking', 'Knitting', 'Long_Jump']
+'''
 
 VIRTUAL_CLASSNAMES = {
     "DescribableTextures": [
-        'mottled', 'veined', 'fringed', 'meshed', 'striated', 'pitted', 'swirled', 'woven', 'ribbed', 'tiled',
-        'netted', 'patched', 'speckled', 'corrugated', 'fractal', 'glossy', 'pebbled', 'scalloped', 'rippled', 'knurled',
-        'frosted', 'gridded', 'etched', 'frayed', 'shimmering', 'quilted', 'spotted', 'twisted', 'looped', 'filigreed',
-        'scuffed', 'bandanaed', 'smeared', 'tessellated', 'beaded', 'corded', 'clumped', 'scaled', 'tufted',
-        'jagged', 'puckered', 'creased', 'beveled', 'pockmarked', 'embroidered', 'embossed', 'latticed', 'warped'
-    ], # 48
+        'speckled', 'woven', 'knobbly', 'striated', 'pitted',
+        'scaly', 'latticed', 'spotted', 'meshed', 'corrugated',
+        'glossy', 'frosted', 'pebbled', 'silky', 'snaked',
+        'stippling', 'tiled', 'twisted', 'braided-looped', 'perforated',
+        'segmented', 'netted', 'patched', 'shimmering', 'spongy',
+        'scuffed', 'splattered', 'etched', 'veined', 'puckered',
+        'quilted', 'embossed', 'fuzzy', 'furry', 'stippled',
+        'glistening', 'rippled', 'pattered', 'foamy', 'tasselled',
+        'hollowed', 'torn', 'ribboned', 'fibred', 'shaggy',
+        'wrinkled', 'fringed', 'creased', 'fractal', 'grained'
+    ],
     "FGVCAircraft": [
         "707-100", "707-120", "707-700", "717-300", "720B", "727-100", "737-MAX7", "737-MAX8", "737-MAX9",
         "747-8", "747-SP", "757-100", "757-300F", "767-100", "767-F", "777F", "777-8", "777-9X", "787-8",
@@ -38,7 +63,191 @@ VIRTUAL_CLASSNAMES = {
         "Gulfstream G200", "Gulfstream G280", "Gulfstream G450", "Gulfstream G550", "Gulfstream G650",
         "Il-76", "Il-96", "Jetstream 41", "King Air 350", "Learjet 35", "Learjet 60", "MD-11", "MD-80", 
         "MD-81", "MD-82", "MD-83", "MD-87", "MD-90", "Piaggio Avanti", "Saab 340", "Saab 2000", "Tu-154"
+    ],
+    "EuroSAT": [
+        'Residential Area',
+        'Airport Runway',
+        'River or Stream',
+        'Solar Farm',
+        'Golf Course',
+        'Bare Soil Land',
+        'Railway Track',
+        'Snow-Covered Area',
+        'Greenhouse Facility',
+        'Wind Turbine Zone'
+    ],
+    "StanfordCars": [
+        '2013 Acura ILX Sedan', '2015 Acura NSX Coupe', '2005 Acura RSX Type-S', '2014 Acura MDX SUV', '2009 Acura RDX SUV',
+        '2011 Aston Martin DB9 Coupe', '2013 Aston Martin Rapide Sedan', '2014 Aston Martin Vanquish Coupe', '2015 Aston Martin DB11 Convertible', '2016 Aston Martin Lagonda Sedan',
+        '2013 Audi A7 Sportback', '2014 Audi Q5 SUV', '2016 Audi A3 Convertible', '2013 Audi S3 Sedan', '2015 Audi A6 Allroad Wagon',
+        '2016 BMW 2 Series Coupe', '2013 BMW i8 Coupe', '2014 BMW 4 Series Coupe', '2015 BMW X4 SUV', '2016 BMW M2 Coupe',
+        '2014 Bentley Flying Spur Sedan', '2015 Bentley Bentayga SUV', '2016 Bentley Continental GT3-R', '2015 Bentley EXP 10 Speed 6 Coupe', '2017 Bentley Azure Convertible',
+        '2013 Bugatti Chiron Coupe', '2015 Bugatti Veyron Grand Sport Vitesse Convertible', '2016 Bugatti Divo Coupe', '2017 Bugatti Centodieci Coupe', '2018 Bugatti La Voiture Noire Coupe',
+        '2014 Buick Encore SUV', '2015 Buick LaCrosse Sedan', '2016 Buick Cascada Convertible', '2014 Buick Lucerne Sedan', '2013 Buick Terraza Minivan',
+        '2013 Cadillac ATS Coupe', '2015 Cadillac ELR Coupe', '2016 Cadillac CT6 Sedan', '2015 Cadillac XTS Sedan', '2016 Cadillac Escalade SUV',
+        '2013 Chevrolet Cruze Sedan', '2014 Chevrolet SS Sedan', '2015 Chevrolet Volt Hatchback', '2016 Chevrolet Suburban SUV', '2015 Chevrolet Spark EV Hatchback',
+        '2016 Chevrolet Colorado Crew Cab', '2015 Chevrolet Malibu Limited Sedan', '2014 Chevrolet Equinox SUV', '2015 Chevrolet City Express Van', '2016 Chevrolet Blazer SUV',
+        '2013 Chrysler 200 Convertible', '2015 Chrysler Pacifica Minivan', '2014 Chrysler 300C Sedan', '2016 Chrysler Aspen Hybrid SUV', '2015 Chrysler Concorde Sedan',
+        '2013 Daewoo Leganza Sedan', '2000 Daewoo Lanos Hatchback', '2001 Daewoo Matiz Hatchback', '2002 Daewoo Tacuma Minivan', '2003 Daewoo Rezzo Wagon',
+        '2013 Dodge Avenger Sedan', '2014 Dodge Dart Sedan', '2016 Dodge Viper GTS Coupe', '2015 Dodge Grand Caravan Minivan', '2016 Dodge Nitro SUV',
+        '2014 Dodge Challenger Hellcat', '2013 Dodge Neon SRT-4', '2015 Dodge Ram 1500 Rebel Crew Cab', '2016 Dodge Journey Crossroad SUV', '2016 Dodge Charger Daytona Sedan',
+        '2013 Ford Focus Hatchback', '2014 Ford Fusion Energi Sedan', '2016 Ford Edge SUV', '2015 Ford Explorer Sport SUV', '2016 Ford Escape Titanium SUV',
+        '2014 Ford Mustang GT Coupe', '2015 Ford F-150 Raptor Crew Cab', '2016 Ford Fiesta ST Hatchback', '2013 Ford Flex SUV', '2015 Ford C-Max Hybrid Hatchback',
+        '2013 GMC Terrain SUV', '2014 GMC Acadia Denali SUV', '2016 GMC Canyon Crew Cab', '2015 GMC Yukon XL SUV', '2016 GMC Savana Passenger Van',
+        '2013 Honda Fit EV Hatchback', '2014 Honda Accord Coupe', '2015 Honda Crosstour Hatchback', '2016 Honda HR-V SUV', '2016 Honda Ridgeline Pickup',
+        '2014 Hyundai Elantra GT Hatchback', '2015 Hyundai Azera Sedan', '2016 Hyundai Veloster Turbo Hatchback', '2015 Hyundai Genesis Coupe', '2016 Hyundai Sonata Plug-In Hybrid',
+        '2013 Infiniti G37 Convertible', '2014 Infiniti Q50 Sedan', '2016 Infiniti QX60 SUV', '2015 Infiniti QX30 Hatchback', '2016 Infiniti Q70L Sedan',
+        '2013 Jaguar XF Sedan', '2015 Jaguar F-Type Coupe', '2016 Jaguar XJ Sedan', '2014 Jaguar XE Sedan', '2016 Jaguar F-Pace SUV',
+        '2013 Jeep Patriot SUV', '2015 Jeep Compass SUV', '2016 Jeep Renegade Trailhawk SUV', '2014 Jeep Grand Cherokee SRT', '2016 Jeep Gladiator Pickup',
+        '2013 Kia Forte Koup Coupe', '2014 Kia Optima Hybrid Sedan', '2015 Kia Soul EV Hatchback', '2016 Kia Sorento SUV', '2015 Kia Sportage SX SUV',
+        '2013 Land Rover LR2 SUV', '2014 Land Rover Range Rover Evoque Coupe', '2016 Land Rover Discovery Sport SUV', '2015 Land Rover Defender 90 SUV', '2016 Land Rover Freelander 2 SUV',
+        '2013 Lexus IS C Convertible', '2014 Lexus GS 350 Sedan', '2015 Lexus NX 300h SUV', '2016 Lexus RC F Coupe', '2016 Lexus RX 450h SUV',
+        '2013 Lincoln MKT SUV', '2014 Lincoln MKZ Hybrid Sedan', '2015 Lincoln Navigator L SUV', '2016 Lincoln Continental Sedan', '2015 Lincoln MKC Reserve SUV',
+        '2013 Maserati GranTurismo Convertible', '2014 Maserati Ghibli Sedan', '2015 Maserati Quattroporte S Q4', '2016 Maserati Levante SUV', '2015 Maserati Alfieri Coupe',
+        '2013 Mazda CX-9 SUV', '2014 Mazda5 Minivan', '2015 Mazda6 i Grand Touring Sedan', '2016 Mazda CX-3 SUV', '2016 Mazda MX-5 Miata RF',
+        '2013 Mercedes-Benz CLA-Class Sedan', '2014 Mercedes-Benz SLK-Class Convertible', '2015 Mercedes-Benz GLA-Class SUV', '2016 Mercedes-Benz S-Class Coupe', '2016 Mercedes-Benz GLS-Class SUV',
+        '2013 MINI Roadster Convertible', '2014 MINI Clubman Wagon', '2015 MINI Paceman Hatchback', '2016 MINI Cooper S Countryman', '2015 MINI Convertible John Cooper Works',
+        '2013 Mitsubishi Lancer Evolution Sedan', '2014 Mitsubishi Outlander Sport SUV', '2015 Mitsubishi Mirage Hatchback', '2016 Mitsubishi i-MiEV Hatchback', '2015 Mitsubishi Galant Sedan',
+        '2013 Nissan Maxima Sedan', '2014 Nissan Juke NISMO RS Hatchback', '2015 Nissan Murano SUV', '2016 Nissan Titan XD Crew Cab', '2015 Nissan Leaf EV Hatchback',
+        '2013 Pontiac G8 GXP Sedan', '2008 Pontiac Solstice Coupe', '2009 Pontiac G6 Convertible', '2006 Pontiac Torrent SUV', '2007 Pontiac Vibe Hatchback',
+        '2013 Porsche Panamera GTS Sedan', '2014 Porsche Macan Turbo SUV', '2015 Porsche Cayman GT4 Coupe', '2016 Porsche 911 Targa 4S', '2016 Porsche 918 Spyder Coupe',
+        '2013 Saab 9-5 Aero Sedan', '2010 Saab 9-3 SportCombi Wagon', '2009 Saab 9-7X SUV', '2008 Saab 9-2X Aero Hatchback', '2011 Saab 9-4X SUV',
+        '2013 Scion FR-S Coupe', '2014 Scion xB Hatchback', '2015 Scion iQ Hatchback', '2016 Scion tC Coupe', '2015 Scion xD Hatchback',
+        '2013 Subaru BRZ Coupe', '2014 Subaru XV Crosstrek Hybrid', '2015 Subaru Forester XT SUV', '2016 Subaru WRX STI Sedan', '2015 Subaru Outback 3.6R Wagon',
+        '2013 Suzuki SX4 Crossover', '2010 Suzuki Kizashi Sedan', '2009 Suzuki Grand Vitara SUV', '2008 Suzuki XL-7 SUV', '2011 Suzuki Equator Crew Cab',
+        '2013 Tesla Model S Sedan', '2015 Tesla Model X SUV', '2017 Tesla Model 3 Sedan', '2019 Tesla Model Y SUV', '2021 Tesla Roadster Coupe'
+    ],
+    "OxfordPets": [
+        'siamese', 'persian', 'maine_coon', 'ragdoll', 'norwegian_forest',
+        'scottish_fold', 'devon_rex', 'sphynx', 'manx', 'russian_blue',
+        'munchkin', 'balinese', 'turkish_van', 'oriental_shorthair', 'cornish_rex',
+        'shih_tzu', 'pomeranian', 'yorkshire_terrier', 'cavalier_king_charles', 'papillon',
+        'pekingese', 'lhasa_apso', 'maltese', 'bichon_frise', 'toy_poodle',
+        'miniature_schnauzer', 'whippet', 'basenji', 'akita', 'alaskan_malamute',
+        'bernese_mountain_dog', 'border_collie', 'briard', 'cairn_terrier', 'dalmatian',
+        'dandie_dinmont', 'doberman_pinscher', 'finnish_spitz', 'flat_coated_retriever', 'golden_retriever',
+        'irish_setter', 'labrador_retriever', 'newfoundland', 'norfolk_terrier', 'old_english_sheepdog',
+        'rottweiler', 'samoyed', 'tibetan_mastiff', 'weimaraner', 'wire_fox_terrier'
+    ],
+    "OxfordFlowers": [
+        'silver lace vine', 'crimson columbine', 'desert marigold', 'mountain laurel',
+        'frosted zinnia', 'wild blue flax', 'chocolate cosmos', 'blue-eyed grass',
+        'sunburst coreopsis', 'crimson paintbrush', 'royal bluebell', 'black bat flower',
+        'fringed bleeding heart', 'golden spider lily', 'coral honeysuckle', 'firewheel',
+        'scarlet beebalm', 'prairie smoke', 'candle larkspur', 'dusky cranesbill',
+        'orchid cactus', 'swamp milkweed', 'silver thistle', 'ice plant',
+        'leopard lily', 'copper iris', 'crown imperial', 'trailing arbutus',
+        'pale gentian', 'lavender mistflower', 'spotted joe-pye weed', 'azure monkshood',
+        'snowdrop anemone', 'arctic poppy', 'meadow rue', 'sunset gaillardia',
+        'crested iris', 'blue passionflower', 'twilight tulip', 'crimson catchfly',
+        'fuzzy wuzzy lamb’s ear', 'red campion', 'spider orchid', 'ghost flower',
+        'silver sagebrush', 'white bleeding heart', 'rocky mountain columbine', 'corydalis blue',
+        'evening primrose', 'glacier lily', 'firebush', 'hummingbird mint',
+        'cushion spurge', 'whirling butterflies', 'turk’s cap lily', 'jacob’s ladder',
+        'purple tansy', 'prairie clover', 'cinnamon fern', 'wild lupine',
+        'yellow loosestrife', 'jacaranda blossom', 'feverfew daisy', 'golden columbine',
+        'salmon zinnia', 'bell heather', 'nodding onion', 'sneezeweed',
+        'woolly blue curls', 'scarlet flax', 'golden ragwort', 'silver bell',
+        'candy tuft', 'cherry pie flower', 'windflower', 'bog rosemary',
+        'orange hawkweed', 'pink turtlehead', 'marsh marigold', 'mountain forget-me-not',
+        'crown daisy', 'laceleaf', 'golden trumpet', 'rosy milkweed',
+        'hairy beardtongue', 'pine barren gentian', 'baby blue eyes', 'creeping phlox',
+        'golden aster', 'fairy fan flower', 'fringed gentian', 'yellow archangel',
+        'starry campion', 'wild indigo', 'flame azalea', 'blue vervain',
+        'red trillium', 'moss campion', 'white wood aster', 'rose campion',
+        'silverleaf nightshade', 'canary creeper', 'chocolate daisy', 'wild blue phlox'
+    ],
+    "Caltech101": [
+        'badger', 'tiger', 'tapir', 'stingray', 'rhino', 'orca', 'walrus', 'toucan', 'macaw', 'komodo_dragon',
+        'banjo', 'harp', 'saxophone', 'mandolin', 'bugle', 'lyre', 'harmonica', 'tambourine', 'accordion_case', 'flute_case',
+        'zeppelin', 'glider', 'biplane', 'space_shuttle', 'rocket_launcher', 'hovercraft', 'monorail', 'bullet_train', 'cable_car', 'submarine',
+        'snowmobile', 'segway', 'rickshaw', 'dune_buggy', 'tricycle', 'golf_cart', 'jet_ski', 'kayak', 'scooter', 'wagon',
+        'sundial', 'barometer', 'telescope', 'microscope', 'thermometer', 'compass', 'sextant', 'astrolabe', 'typewriter', 'abacus',
+        'pogo_stick', 'yo_yo', 'marble', 'teddy_bear', 'toy_soldier', 'kaleidoscope', 'rubiks_cube', 'puppet', 'slinky', 'spinning_top',
+        'teacup', 'wine_glass', 'goblet', 'mug', 'thermos', 'pitcher', 'chalice', 'saucer', 'espresso_machine', 'blender',
+        'koala', 'jellyfish', 'starfish', 'octopus', 'narwhal', 'seahorse', 'penguin', 'meerkat', 'wombat', 'lemur',
+        'lamp_post', 'mailbox', 'fire_hydrant', 'traffic_cone', 'satellite_dish', 'wind_turbine', 'vending_machine', 'arcade_machine', 'jukebox', 'pinball_machine',
+        'carousel', 'roller_coaster', 'ferris_wheel', 'swing_set', 'slide', 'seesaw', 'sandbox', 'trampoline', 'kite', 'hot_air_balloon'
+    ],
+    "SUN397": [
+        'indoor abandoned_restaurant', 'indoor abandoned_shed', 'indoor bright_restaurant',
+        'indoor compact_area', 'indoor compact_closet', 'indoor compact_deck', 'indoor compact_platform',
+        'indoor cozy_chamber', 'indoor cozy_kitchen', 'indoor cozy_restaurant', 'indoor elevated_area',
+        'indoor elevated_platform', 'indoor elevated_zone', 'indoor hidden_arcade', 'indoor hidden_chamber',
+        'indoor hidden_garden', 'indoor hidden_terrace', 'indoor historic_arcade', 'indoor historic_lounge',
+        'indoor historic_office', 'indoor historic_shop', 'indoor lush_garden', 'indoor lush_terrace',
+        'indoor modern_arcade', 'indoor modern_closet', 'indoor modern_gallery', 'indoor modern_kitchen',
+        'indoor modern_office', 'indoor modern_platform', 'indoor modern_restaurant', 'indoor modern_shed',
+        'indoor modern_shop', 'indoor modern_station', 'indoor modern_terrace', 'indoor modern_zone',
+        'indoor noisy_arcade', 'indoor noisy_shop', 'indoor quiet_arcade', 'indoor quiet_gallery',
+        'indoor quiet_kitchen', 'indoor quiet_lounge', 'indoor quiet_office', 'indoor quiet_restaurant',
+        'indoor quiet_terrace', 'indoor spacious_area', 'indoor spacious_chamber', 'indoor spacious_closet',
+        'indoor spacious_restaurant', 'indoor spacious_terrace', 'indoor sunlit_arcade', 'indoor sunlit_chamber',
+        'indoor sunlit_gallery', 'indoor sunlit_garden', 'indoor sunlit_kitchen', 'indoor sunlit_lounge',
+        'indoor sunlit_restaurant', 'indoor sunlit_terrace', 'indoor underground_arcade', 'indoor underground_chamber',
+        'indoor underground_gallery', 'indoor underground_restaurant', 'indoor underground_shed', 'indoor underground_station',
+        'mountain abandoned_shed', 'mountain bright_platform', 'mountain bright_zone', 'mountain compact_platform',
+        'mountain cozy_garden', 'mountain elevated_area', 'mountain hidden_chamber', 'mountain hidden_garden',
+        'mountain hidden_zone', 'mountain lush_garden', 'mountain lush_terrace', 'mountain modern_gallery',
+        'mountain modern_station', 'mountain noisy_zone', 'mountain quiet_terrace', 'mountain spacious_area',
+        'mountain spacious_zone', 'mountain sunlit_terrace', 'mountain underground_shed', 'mountain underground_station',
+        'open bright_area', 'open bright_field', 'open bright_platform', 'open compact_area', 'open compact_garden',
+        'open cozy_area', 'open cozy_garden', 'open cozy_platform', 'open hidden_garden', 'open hidden_zone',
+        'open historic_terrace', 'open lush_field', 'open modern_area', 'open modern_field', 'open modern_terrace',
+        'open modern_zone', 'open noisy_platform', 'open quiet_garden', 'open quiet_zone', 'open spacious_area',
+        'open spacious_field', 'open spacious_garden', 'open spacious_platform', 'open sunlit_field', 'open sunlit_garden',
+        'open sunlit_platform', 'open underground_platform', 'outdoor abandoned_platform', 'outdoor bright_arcade',
+        'outdoor bright_chamber', 'outdoor bright_garden', 'outdoor bright_platform', 'outdoor bright_zone',
+        'outdoor compact_garden', 'outdoor compact_terrace', 'outdoor cozy_arcade', 'outdoor cozy_garden',
+        'outdoor cozy_platform', 'outdoor cozy_zone', 'outdoor elevated_platform', 'outdoor elevated_zone',
+        'outdoor hidden_arcade', 'outdoor hidden_platform', 'outdoor historic_garden', 'outdoor historic_zone',
+        'outdoor lush_garden', 'outdoor lush_zone', 'outdoor modern_arcade', 'outdoor modern_garden',
+        'outdoor modern_lounge', 'outdoor modern_platform', 'outdoor modern_shop', 'outdoor modern_station',
+        'outdoor modern_terrace', 'outdoor modern_zone', 'outdoor noisy_arcade', 'outdoor noisy_platform',
+        'outdoor quiet_arcade', 'outdoor quiet_garden', 'outdoor quiet_zone', 'outdoor spacious_arcade',
+        'outdoor spacious_garden', 'outdoor spacious_zone', 'outdoor sunlit_arcade', 'outdoor sunlit_garden',
+        'outdoor sunlit_terrace', 'outdoor sunlit_zone', 'outdoor underground_platform', 'outdoor underground_zone',
+        'rural abandoned_garden', 'rural abandoned_shed', 'rural bright_garden', 'rural bright_platform',
+        'rural compact_shed', 'rural cozy_garden', 'rural cozy_shed', 'rural elevated_zone', 'rural hidden_garden',
+        'rural historic_garden', 'rural lush_terrace', 'rural modern_garden', 'rural modern_shed', 'rural modern_station',
+        'rural quiet_garden', 'rural spacious_garden', 'rural spacious_platform', 'rural sunlit_garden',
+        'rural underground_shed', 'rural underground_station', 'suburban bright_garden', 'suburban compact_area',
+        'suburban cozy_zone', 'suburban elevated_platform', 'suburban hidden_zone', 'suburban historic_arcade',
+        'suburban historic_station', 'suburban modern_garden', 'suburban modern_lounge', 'suburban modern_zone',
+        'suburban noisy_garden', 'suburban quiet_garden', 'suburban spacious_zone', 'suburban sunlit_garden',
+        'suburban underground_zone', 'underground abandoned_chamber', 'underground abandoned_platform',
+        'underground abandoned_station', 'underground compact_chamber', 'underground compact_zone',
+        'underground cozy_chamber', 'underground cozy_platform', 'underground cozy_zone', 'underground hidden_station',
+        'underground historic_chamber', 'underground historic_station', 'underground modern_chamber',
+        'underground modern_station', 'underground noisy_chamber', 'underground quiet_chamber',
+        'underground quiet_platform', 'underground spacious_chamber', 'underground spacious_platform',
+        'underground sunlit_chamber', 'urban abandoned_arcade', 'urban abandoned_station', 'urban bright_area',
+        'urban bright_station', 'urban compact_station', 'urban cozy_area', 'urban cozy_lounge', 'urban elevated_platform',
+        'urban hidden_arcade', 'urban hidden_station', 'urban historic_area', 'urban historic_gallery',
+        'urban lush_terrace', 'urban modern_gallery', 'urban modern_station', 'urban noisy_arcade',
+        'urban quiet_station', 'urban spacious_platform', 'urban sunlit_gallery', 'urban sunlit_lounge'
+    ],
+    "UCF101":  [
+        'Aerial_Yoga', 'Animal_Feeding', 'Arm_Wrestling', 'Axe_Throwing', 'Backflip', 'Balance_Board',
+        'Ballet_Twirl', 'Barbell_Curl', 'Beach_Volleyball', 'Bench_Dips', 'Bobsled_Racing', 'Bottle_Flipping',
+        'Box_Jumping', 'Bubble_Blowing', 'Candle_Making', 'Canoe_Sprint', 'Card_Shuffling', 'Cartwheel',
+        'Chopping_Wood', 'Clapping', 'Climbing_Ladder', 'Coffee_Pouring', 'Cornhole_Throw', 'Cooking_Pasta',
+        'Crate_Stacking', 'Crowd_Waving', 'Curling_Sport', 'Cyclocross', 'Dance_Battle', 'Dodgeball',
+        'Dog_Agility', 'Drawing_Sketch', 'Dumbbell_Fly', 'Egg_Toss', 'Face_Washing', 'Fan_Waving',
+        'Fire_Eating', 'Fishing_Cast', 'Flag_Waving', 'Flipping_Pancake', 'Flower_Arranging', 'Foam_Rolling',
+        'Football_Catch', 'Foot_Massage', 'Glass_Blowing', 'Goggles_Adjusting', 'Golf_Putting', 'Hacky_Sack',
+        'Hair_Braiding', 'Hand_Clapping', 'Handwriting', 'Hiking_Uphill', 'Hurdle_Jump', 'Ice_Skating_Spin',
+        'Inline_Skating', 'Jump_High_Kick', 'Kettle_Bell_Swing', 'Kickball', 'Kite_Flying', 'Ladder_Climbing',
+        'Lawn_Mowing', 'Leaf_Raking', 'Light_Saber_Duel', 'Martial_Arts_Kick', 'Massage_Back', 'Mixing_Drinks',
+        'Mountain_Biking', 'Nunchuck_Spinning', 'Origami_Folding', 'Painting_Wall', 'Paper_Plane_Throw',
+        'Parkour_Vault', 'Pencil_Sharpening', 'Ping_Pong_Smash', 'Pizza_Tossing', 'Plant_Watering',
+        'Pole_Vault', 'Push_Cart', 'Putting_Contacts', 'Racket_Spin', 'Rock_Climbing_Indoor', 'Rollerblading',
+        'Rowing_Competition', 'Rugby_Pass', 'Salsa_Dancing', 'Sand_Castle_Building', 'Scarf_Tying',
+        'Scuba_Diving', 'Shaving_Beard', 'Shopping_Bag_Lift', 'Shoveling_Snow', 'Shuffle_Dance', 'Ski_Jumping',
+        'Slackline_Walking', 'Snowball_Throw', 'Snowboarding', 'Soap_Bubble_Play', 'Speed_Walking', 'Spinning_Wheel',
+        'Squash_Rally', 'Stretching_Legs', 'Surfing_Wave', 'Swing_Jumping', 'Sword_Fight', 'Table_Saw_Use'
     ]
+    
 }
 
 def load_clip_to_cpu(cfg, zero_shot_model=False):
@@ -97,9 +306,15 @@ class TextEncoder(nn.Module):
 class VLPromptLearner(nn.Module):
     def __init__(self, cfg, classnames, clip_model):
         super().__init__()
+        print(classnames)
         if cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS:
             print("Using virtual classnames")
             vrclassnames = VIRTUAL_CLASSNAMES[cfg.DATASET.NAME]
+            
+            # suffle with seed=0
+            np.random.seed(0)
+            np.random.shuffle(vrclassnames)
+            
             # remove duplicates
             l = len(classnames)
             p = int(cfg.TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE)
@@ -111,7 +326,6 @@ class VLPromptLearner(nn.Module):
                     break
                 if name not in classnames:
                     classnames.append(name)
-
 
         n_cls = len(classnames)
         print(f"len={len(classnames)}, {classnames}")
@@ -253,8 +467,8 @@ class CustomCLIP(nn.Module):
             
             loss_ce = F.cross_entropy(logits[:, :self.orig_n_cls], label) # jin TODO: remove this
             # text_features = text_features[:self.orig_n_cls]
-            zero_shot_logits = zero_shot_logits[:, :self.orig_n_cls]
-            logits = logits[:, :self.orig_n_cls]
+            # zero_shot_logits = zero_shot_logits[:, :self.orig_n_cls]
+            # logits = logits[:, :self.orig_n_cls]
             # fixed_embeddings = fixed_embeddings[:self.orig_n_cls]
             # logits[:, :self.orig_n_cls] = logits[:, :self.orig_n_cls] * 1.5
             # zero_shot_logits = zero_shot_logits * zero_shot_logits
@@ -357,14 +571,6 @@ class PromptSRC(TrainerX):
             # Calculate the L_SCL_text loss
             loss_scl_text = F.l1_loss(normalized_text_features, zs_clip_text_embeddings.cuda(),
                                       reduction='mean') * self.cfg.TRAINER.PROMPTSRC.TEXT_LOSS_WEIGHT
-            # loss_scl_text = F.l1_loss(normalized_text_features, zs_clip_text_embeddings[:self.model.orig_n_cls].cuda(), #jin
-            #                           reduction='mean') * self.cfg.TRAINER.PROMPTSRC.TEXT_LOSS_WEIGHT
-            
-            # contrastive loss between the virtual class and the original class # jin
-            virtual_zs_clip_text_embeddings = zs_clip_text_embeddings.to(normalized_text_features.dtype)
-            sim_matrix = torch.matmul(normalized_text_features[:self.model.orig_n_cls], virtual_zs_clip_text_embeddings[self.model.orig_n_cls:].t())
-            virtual_contrastive_loss = sim_matrix.mean() 
-        
             # Calculate the L_SCL_image loss
             loss_scl_image = F.l1_loss(image_ft, zs_image_embedd.cuda(),
                                        reduction='mean') * self.cfg.TRAINER.PROMPTSRC.IMAGE_LOSS_WEIGHT
@@ -375,8 +581,7 @@ class PromptSRC(TrainerX):
                 reduction='sum',
                 log_target=True
             ) * (1 * 1) / logits.numel()
-            # L_SCL = (L_SCL_logits + loss_scl_text + loss_scl_image)
-            L_SCL = (L_SCL_logits + loss_scl_text + loss_scl_image) + virtual_contrastive_loss
+            L_SCL = (L_SCL_logits + loss_scl_text + loss_scl_image)
             if self.cfg.TRAINER.PROMPTSRC.NO_SCL:
                 L_SCL = 0
             loss = (loss_ce + L_SCL)

@@ -14,7 +14,7 @@ PERCENTAGE=$3
 DIR=output/base2new_vrcls_${PERCENTAGE}/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
 if [ -d "$DIR" ]; then
     echo "Results are available in ${DIR}. Resuming..."
-    python train.py \
+    /hdd/hdd3/jsh/miniconda3/envs/coop/bin/python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \
@@ -26,7 +26,7 @@ if [ -d "$DIR" ]; then
     TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE ${PERCENTAGE}
 else
     echo "Run this job and save the output to ${DIR}"
-    python train.py \
+    /hdd/hdd3/jsh/miniconda3/envs/coop/bin/python train.py \
     --root ${DATA} \
     --seed ${SEED} \
     --trainer ${TRAINER} \

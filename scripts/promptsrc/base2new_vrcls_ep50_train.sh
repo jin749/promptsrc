@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # custom config
 DATA="/hdd/hdd3/jsh/DATA"
 TRAINER=PromptSRC
@@ -8,19 +7,13 @@ TRAINER=PromptSRC
 DATASET=$1
 SEED=$2
 
-CFG=vit_b16_c2_ep500_batch4_4+4ctx_vrcls
+CFG=vit_b16_c2_ep50_batch4_4+4ctx_vrcls
 SHOTS=16
-LOADEP=500
-SUB=$3
+PERCENTAGE=$3
 
-
-COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
-MODEL_DIR=output/base2new_ep500_vrcls/train_base/${COMMON_DIR}
-DIR=output/base2new_ep500_vrcls/test_${SUB}/${COMMON_DIR}
+DIR=output/base2new_vrcls_${PERCENTAGE}_ep50/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
 if [ -d "$DIR" ]; then
-    echo "Evaluating model"
     echo "Results are available in ${DIR}. Resuming..."
-
     /hdd/hdd3/jsh/miniconda3/envs/coop/bin/python train.py \
     --root ${DATA} \
     --seed ${SEED} \
@@ -28,16 +21,11 @@ if [ -d "$DIR" ]; then
     --dataset-config-file configs/datasets/${DATASET}.yaml \
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
-    --model-dir ${MODEL_DIR} \
-    --load-epoch ${LOADEP} \
-    --eval-only \
     DATASET.NUM_SHOTS ${SHOTS} \
-    DATASET.SUBSAMPLE_CLASSES ${SUB}
-
+    DATASET.SUBSAMPLE_CLASSES base \
+    TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE ${PERCENTAGE}
 else
-    echo "Evaluating model"
-    echo "Runing the first phase job and save the output to ${DIR}"
-
+    echo "Run this job and save the output to ${DIR}"
     /hdd/hdd3/jsh/miniconda3/envs/coop/bin/python train.py \
     --root ${DATA} \
     --seed ${SEED} \
@@ -45,9 +33,7 @@ else
     --dataset-config-file configs/datasets/${DATASET}.yaml \
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
-    --model-dir ${MODEL_DIR} \
-    --load-epoch ${LOADEP} \
-    --eval-only \
     DATASET.NUM_SHOTS ${SHOTS} \
-    DATASET.SUBSAMPLE_CLASSES ${SUB}
+    DATASET.SUBSAMPLE_CLASSES base \
+    TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE ${PERCENTAGE}
 fi
