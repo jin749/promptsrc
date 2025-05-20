@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug PromptSRC Training",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/train.py",
+        "console": "integratedTerminal",
+        "python": "/hdd/hdd3/jsh/miniconda3/envs/coop/bin/python",
+        "args": [
+          "--root", "/hdd/hdd3/jsh/DATA",
+          "--seed", "4",  // 이건 테스트용 seed, 원하는 값으로 바꿔
+          "--trainer", "PromptSRC",
+          "--dataset-config-file", "configs/datasets/dtd.yaml",  // DATASET 이름을 여기에 넣어
+          "--config-file", "configs/trainers/PromptSRC/vit_b16_c2_ep20_batch4_4+4ctx_vrcls_vrimg.yaml",
+          "--output-dir", "output/base2new_vrcls_vrimg_100/train_base/dtd/shots_16/PromptSRC/vit_b16_c2_ep20_batch4_4+4ctx_vrcls_vrimg/seed4",
+          "DATASET.NUM_SHOTS", "16",
+          "DATASET.SUBSAMPLE_CLASSES", "base",
+          "TRAINER.PROMPTSRC.VIRTUAL_CLASS_PERCENTAGE", "100"
+        ],
+      }
+    ]
+  }

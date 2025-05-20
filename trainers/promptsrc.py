@@ -11,8 +11,14 @@ from dassl.utils import load_pretrained_weights, load_checkpoint
 from dassl.optim import build_optimizer, build_lr_scheduler
 from clip import clip
 from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
-from .imagenet_templates import IMAGENET_TEMPLATES
 import math
+from collections import defaultdict
+from tqdm import tqdm
+from dassl.utils import (
+    MetricMeter, AverageMeter, load_checkpoint, load_pretrained_weights
+)
+import time
+import datetime
 
 _tokenizer = _Tokenizer()
 '''
@@ -250,6 +256,70 @@ VIRTUAL_CLASSNAMES = {
     
 }
 
+
+IMAGENET_TEMPLATES = [
+    "a photo of a {}.",
+    "a bad photo of a {}.",
+    "a photo of many {}.",
+    "a sculpture of a {}.",
+    "a photo of the hard to see {}.",
+    "a low resolution photo of the {}.",
+    "a rendering of a {}.",
+    "graffiti of a {}.",
+    "a bad photo of the {}.",
+    "a cropped photo of the {}.",
+    "a tattoo of a {}.",
+    "the embroidered {}.",
+    "a photo of a hard to see {}.",
+    "a bright photo of a {}.",
+    "a photo of a clean {}.",
+    "a photo of a dirty {}.",
+    "a dark photo of the {}.",
+    "a drawing of a {}.",
+    "a photo of my {}.",
+    "the plastic {}.",
+    "a photo of the cool {}.",
+    "a close-up photo of a {}.",
+    "a black and white photo of the {}.",
+    "a painting of the {}.",
+    "a painting of a {}.",
+    "a pixelated photo of the {}.",
+    "a sculpture of the {}.",
+    "a bright photo of the {}.",
+    "a cropped photo of a {}.",
+    "a plastic {}.",
+    "a photo of the dirty {}.",
+    "a jpeg corrupted photo of a {}.",
+    "a blurry photo of the {}.",
+    "a photo of the {}.",
+    "a good photo of the {}.",
+    "a rendering of the {}.",
+    "a {} in a video game.",
+    "a photo of one {}.",
+    "a doodle of a {}.",
+    "a close-up photo of the {}.",
+    "the origami {}.",
+    "the {} in a video game.",
+    "a sketch of a {}.",
+    "a doodle of the {}.",
+    "a origami {}.",
+    "a low resolution photo of a {}.",
+    "the toy {}.",
+    "a rendition of the {}.",
+    "a photo of the clean {}.",
+    "a photo of a large {}.",
+    "a rendition of a {}.",
+    "a photo of a nice {}.",
+    "a photo of a weird {}.",
+    "a blurry photo of a {}.",
+    "a cartoon {}.",
+    "art of a {}.",
+    "a sketch of the {}.",
+    "a embroidered {}.",
+    "a pixelated photo of a {}.",
+    "itap of the {}.",
+]
+
 def load_clip_to_cpu(cfg, zero_shot_model=False):
     backbone_name = cfg.MODEL.BACKBONE.NAME
     url = clip._MODELS[backbone_name]
@@ -326,7 +396,23 @@ class VLPromptLearner(nn.Module):
                     break
                 if name not in classnames:
                     classnames.append(name)
-
+            
+            if cfg.TRAINER.PROMPTSRC.VIRTUAL_IMAGE:
+                class_prompt_dict = defaultdict(list)
+                device = clip_model.parameters().__next__().device
+                clip_model = clip_model.cuda()
+                # for name in tqdm(classnames[l:]):
+                for name in tqdm(classnames):
+                    name = name.replace("_", " ")
+                    for template in IMAGENET_TEMPLATES:
+                        text = template.format(name)
+                        with torch.no_grad():
+                            text_feature = clip_model.encode_text(clip.tokenize(text).cuda())
+                        class_prompt_dict[name].append(text_feature)
+                clip_model = clip_model.to(device)
+                class_prompt_dict = {k: torch.concat(v, dim=0) for k, v in class_prompt_dict.items()}
+                self.class_prompt_dict = class_prompt_dict
+                
         n_cls = len(classnames)
         print(f"len={len(classnames)}, {classnames}")
         # Make sure Language depth >= 1
@@ -447,7 +533,12 @@ class CustomCLIP(nn.Module):
         prompts = self.prompt_learner()
         # Compute the prompted image and text features
         text_features = self.text_encoder(prompts, tokenized_prompts)
-        image_features = self.image_encoder(image.type(self.dtype))
+        if image.shape[-1] == 512: # jin added TODO
+            # If the image is already encoded, we don't need to encode it again
+            image_features = image
+        else:
+            image_features = self.image_encoder(image.type(self.dtype))  
+        # image_features = self.image_encoder(image.type(self.dtype))
         image_features = image_features / image_features.norm(dim=-1, keepdim=True)
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)
         # Compute the prompted logits
@@ -457,13 +548,18 @@ class CustomCLIP(nn.Module):
             fixed_embeddings = self.prompt_learner.fixed_embeddings  # precomputed pre-trained frozen textual features
             fixed_embeddings = fixed_embeddings / fixed_embeddings.norm(dim=-1, keepdim=True)
             with torch.no_grad():
-                zero_shot_features = self.prompt_learner.ZS_image_encoder(image.type(self.dtype))
+                if image.shape[-1] == 512: # jin added TODO
+                    zero_shot_features = image
+                else:
+                    zero_shot_features = self.prompt_learner.ZS_image_encoder(image.type(self.dtype))
+                    
+                # zero_shot_features = self.prompt_learner.ZS_image_encoder(image.type(self.dtype))
                 zero_shot_features = zero_shot_features / zero_shot_features.norm(dim=-1, keepdim=True)
                 # Compute pre-trained frozen visual features
                 zero_shot_logits = logit_scale * zero_shot_features.cuda() @ fixed_embeddings.half().cuda().t()
                 
-            # return F.cross_entropy(logits, label), text_features, fixed_embeddings, zero_shot_features, \
-            #        image_features, zero_shot_logits, logits
+            return F.cross_entropy(logits, label), text_features, fixed_embeddings, zero_shot_features, \
+                   image_features, zero_shot_logits, logits
             
             loss_ce = F.cross_entropy(logits[:, :self.orig_n_cls], label) # jin TODO: remove this
             # text_features = text_features[:self.orig_n_cls]
@@ -491,6 +587,7 @@ class PromptSRC(TrainerX):
     def build_model(self):
         cfg = self.cfg
         classnames = self.dm.dataset.classnames
+        self.orig_n_cls = len(classnames)
 
         print(f"Loading CLIP (backbone: {cfg.MODEL.BACKBONE.NAME})")
         clip_model = load_clip_to_cpu(cfg)
@@ -549,8 +646,103 @@ class PromptSRC(TrainerX):
             self.model = nn.DataParallel(self.model)
         # Keep model with GPA
         self.previous_model_gpa = None
+        
+        if cfg.TRAINER.PROMPTSRC.VIRTUAL_IMAGE:
+            from dassl.data.transforms import build_transform
+            from dassl.data.data_manager import build_data_loader
+            from dassl.data.datasets.base_dataset import Datum
+            print("Using virtual image features")
+            with torch.no_grad():
+                device = clip_model.parameters().__next__().device
+                clip_model = clip_model.cuda()
+                img_features = [data['img'] for data in self.train_loader_x.dataset]
+                img_features = torch.stack(img_features, dim=0)
+                # img_features = img_features.cuda()
+                # img_features = clip_model.encode_image(img_features) # to much memory
+                img_features = [clip_model.encode_image(img_feat.unsqueeze(0).cuda()).cpu() for img_feat in img_features]
+                img_features = torch.cat(img_features, dim=0)
+                img_features = img_features / img_features.norm(dim=-1, keepdim=True)
+                clip_model = clip_model.to(device)
+                
+                additional_data = []
+                for i, name in enumerate(classnames):
+                    # if name in self.model.prompt_learner.class_prompt_dict.keys():
+                    text = self.model.prompt_learner.class_prompt_dict[name].cuda()
+                    start = 0
+                    interval = 100
+                    projected_text = 0
+                    while start < img_features.shape[0]:
+                        end = start + interval
+                        img = img_features[start:end].cuda()
+                        weight = text @ img.T
+                        projected_text += weight @ img 
+                        start = end
+                    projected_text = projected_text / projected_text.norm(dim=-1, keepdim=True)
+                    projected_text = projected_text.cpu()
+                    for j, t in enumerate(projected_text):
+                        additional_data.append({'img': t, 'label': i})
+                        # if j == 15:
+                        #     break
+                        # TODO jin: 60개 전부 다 넣는걸로 해놨는데 나중에 ablation 필요.
+                        
+            # extended_data_source = self.train_loader_x.dataset.data_source + additional_data
+            # # extended_data_source = [[data] for data in extended_data_source]
+            # self.train_loader_x = build_data_loader(
+            #     cfg,
+            #     sampler_type=cfg.DATALOADER.TRAIN_X.SAMPLER,
+            #     data_source=extended_data_source,
+            #     batch_size=cfg.DATALOADER.TRAIN_X.BATCH_SIZE,
+            #     n_domain=cfg.DATALOADER.TRAIN_X.N_DOMAIN,
+            #     n_ins=cfg.DATALOADER.TRAIN_X.N_INS,
+            #     tfm=build_transform(cfg, is_train=True),
+            #     is_train=True,
+            #     dataset_wrapper=CustomDatasetWrapper
+            # )
+            
+            self.train_loader_a = build_data_loader(
+                cfg,
+                sampler_type=cfg.DATALOADER.TRAIN_X.SAMPLER,
+                data_source=additional_data,
+                batch_size=cfg.DATALOADER.TRAIN_X.BATCH_SIZE,
+                n_domain=cfg.DATALOADER.TRAIN_X.N_DOMAIN,
+                n_ins=cfg.DATALOADER.TRAIN_X.N_INS,
+                tfm=build_transform(cfg, is_train=True),
+                is_train=True,
+                dataset_wrapper=CustomDatasetWrapper
+            )
+            # class _DatasetWrapper(Dataset):
+            #     def __init__(self, data_list):
+            #         self.data = data_list
 
-    def forward_backward(self, batch):
+            #     def __len__(self):
+            #         return len(self.data)
+
+            #     def __getitem__(self, idx):
+            #         return self.data[idx] 
+            
+            # self.train_loader_a = build_data_loader(
+            #             cfg,
+            #             sampler_type=cfg.DATALOADER.TRAIN_X.SAMPLER,
+            #             data_source=_DatasetWrapper(additional_data),
+            #             batch_size=cfg.DATALOADER.TRAIN_X.BATCH_SIZE,
+            #             n_domain=cfg.DATALOADER.TRAIN_X.N_DOMAIN,
+            #             n_ins=cfg.DATALOADER.TRAIN_X.N_INS,
+            #             tfm=build_transform(cfg, is_train=True),
+            #             is_train=True,
+            #             dataset_wrapper=None, 
+            #         )
+            # self.train_loader_a = DataLoader(_DatasetWrapper(additional_data), batch_size=cfg.DATALOADER.TRAIN_X.BATCH_SIZE, shuffle=True, num_workers=cfg.DATALOADER.NUM_WORKERS)
+            # for batch in self.train_loader_a:
+            #     image, label = self.parse_batch_train(batch)
+            #     image = image.cuda()
+            #     label = label.cuda()
+                # print(image.shape, label.shape)
+                # breakpoint()
+                # print(image[0].shape, label[0].shape)
+                # breakpoint()
+        
+    
+    def forward_backward(self, batch, gpa=True):
         image, label = self.parse_batch_train(batch)
 
         model = self.model
@@ -591,22 +783,23 @@ class PromptSRC(TrainerX):
 
         loss_summary = {"loss": loss.item()}
 
-        if (self.batch_idx + 1) == self.num_batches:
-            self.update_lr()
-            # Means one epoch is completed, perform GPA
-            self.step_counter = self.step_counter + 1
-            current_epoch_weight = self.gauss[self.step_counter - 2]
-            current_model_weights = copy.deepcopy(model.state_dict())
-            weighted_state_dict = self.state_dict_weighting(current_model_weights, current_epoch_weight)
-            if self.previous_model_gpa is None:
-                self.previous_model_gpa = weighted_state_dict
-            else:
-                self.previous_model_gpa = self.state_dict_add(weighted_state_dict, self.previous_model_gpa)
+        if gpa: # jin added TODO
+            if (self.batch_idx + 1) == self.num_batches:
+                self.update_lr()
+                # Means one epoch is completed, perform GPA
+                self.step_counter = self.step_counter + 1
+                current_epoch_weight = self.gauss[self.step_counter - 2]
+                current_model_weights = copy.deepcopy(model.state_dict())
+                weighted_state_dict = self.state_dict_weighting(current_model_weights, current_epoch_weight)
+                if self.previous_model_gpa is None:
+                    self.previous_model_gpa = weighted_state_dict
+                else:
+                    self.previous_model_gpa = self.state_dict_add(weighted_state_dict, self.previous_model_gpa)
 
-        if self.step_counter == self.model.total_epochs + 1:
-            print("Using GPA model for final inference...")
-            model.load_state_dict(self.previous_model_gpa)
-            self.model.load_state_dict(self.previous_model_gpa)
+            if self.step_counter == self.model.total_epochs + 1:
+                print("Using GPA model for final inference...")
+                model.load_state_dict(self.previous_model_gpa)
+                self.model.load_state_dict(self.previous_model_gpa)
         return loss_summary
 
     def state_dict_weighting(self, main_dict, weightage, prompt_only=False):
@@ -673,3 +866,179 @@ class PromptSRC(TrainerX):
             print("Loading weights to {} " 'from "{}" (epoch = {})'.format(name, model_path, epoch))
             # set strict=False
             self._models[name].load_state_dict(state_dict, strict=False)
+            
+    def run_epoch(self):
+        self.set_model_mode("train")
+        
+        if self.cfg.TRAINER.PROMPTSRC.VIRTUAL_IMAGE: #jin added TODO
+            self.run_addtional_epoch()   
+        
+        losses = MetricMeter()
+        batch_time = AverageMeter()
+        data_time = AverageMeter()
+        self.num_batches = len(self.train_loader_x)
+
+        end = time.time()
+        for self.batch_idx, batch in enumerate(self.train_loader_x):
+            data_time.update(time.time() - end)
+            loss_summary = self.forward_backward(batch)
+            batch_time.update(time.time() - end)
+            losses.update(loss_summary)
+
+            meet_freq = (self.batch_idx + 1) % self.cfg.TRAIN.PRINT_FREQ == 0
+            only_few_batches = self.num_batches < self.cfg.TRAIN.PRINT_FREQ
+            if meet_freq or only_few_batches:
+                nb_remain = 0
+                nb_remain += self.num_batches - self.batch_idx - 1
+                nb_remain += (
+                    self.max_epoch - self.epoch - 1
+                ) * self.num_batches
+                eta_seconds = batch_time.avg * nb_remain
+                eta = str(datetime.timedelta(seconds=int(eta_seconds)))
+
+                info = []
+                info += [f"epoch [{self.epoch + 1}/{self.max_epoch}]"]
+                info += [f"batch [{self.batch_idx + 1}/{self.num_batches}]"]
+                info += [f"time {batch_time.val:.3f} ({batch_time.avg:.3f})"]
+                info += [f"data {data_time.val:.3f} ({data_time.avg:.3f})"]
+                info += [f"{losses}"]
+                info += [f"lr {self.get_current_lr():.4e}"]
+                info += [f"eta {eta}"]
+                print(" ".join(info))
+
+            n_iter = self.epoch * self.num_batches + self.batch_idx
+            for name, meter in losses.meters.items():
+                self.write_scalar("train/" + name, meter.avg, n_iter)
+            self.write_scalar("train/lr", self.get_current_lr(), n_iter)
+
+            end = time.time()     
+
+    def run_addtional_epoch(self):
+        print("Training with virtual image features")
+        losses = MetricMeter()
+        batch_time = AverageMeter()
+        data_time = AverageMeter()
+        self.num_batches = len(self.train_loader_a)
+
+        end = time.time()
+        for self.batch_idx, batch in enumerate(self.train_loader_a):
+            data_time.update(time.time() - end)
+            loss_summary = self.forward_backward(batch, False)
+            batch_time.update(time.time() - end)
+            losses.update(loss_summary)
+
+            meet_freq = (self.batch_idx + 1) % self.cfg.TRAIN.PRINT_FREQ == 0
+            only_few_batches = self.num_batches < self.cfg.TRAIN.PRINT_FREQ
+            if meet_freq or only_few_batches:
+                nb_remain = 0
+                nb_remain += self.num_batches - self.batch_idx - 1
+                nb_remain += (
+                    self.max_epoch - self.epoch - 1
+                ) * self.num_batches
+                eta_seconds = batch_time.avg * nb_remain
+                eta = str(datetime.timedelta(seconds=int(eta_seconds)))
+
+                info = []
+                info += [f"epoch [{self.epoch + 1}/{self.max_epoch}]"]
+                info += [f"batch [{self.batch_idx + 1}/{self.num_batches}]"]
+                info += [f"time {batch_time.val:.3f} ({batch_time.avg:.3f})"]
+                info += [f"data {data_time.val:.3f} ({data_time.avg:.3f})"]
+                info += [f"{losses}"]
+                info += [f"lr {self.get_current_lr():.4e}"]
+                info += [f"eta {eta}"]
+                print(" ".join(info))
+
+            n_iter = self.epoch * self.num_batches + self.batch_idx
+            for name, meter in losses.meters.items():
+                self.write_scalar("train/" + name, meter.avg, n_iter)
+            self.write_scalar("train/lr", self.get_current_lr(), n_iter)
+
+            end = time.time()
+            
+
+from dassl.utils import read_image
+from torch.utils.data import Dataset as TorchDataset
+from dassl.data.datasets.base_dataset import Datum
+from dassl.data.transforms import INTERPOLATION_MODES, build_transform
+import torchvision.transforms as T
+class CustomDatasetWrapper(TorchDataset):
+
+    def __init__(self, cfg, data_source, transform=None, is_train=False):
+        self.cfg = cfg
+        self.data_source = data_source
+        self.transform = transform  # accept list (tuple) as input
+        self.is_train = is_train
+        # Augmenting an image K>1 times is only allowed during training
+        self.k_tfm = cfg.DATALOADER.K_TRANSFORMS if is_train else 1
+        self.return_img0 = cfg.DATALOADER.RETURN_IMG0
+
+        if self.k_tfm > 1 and transform is None:
+            raise ValueError(
+                "Cannot augment the image {} times "
+                "because transform is None".format(self.k_tfm)
+            )
+
+        # Build transform that doesn't apply any data augmentation
+        interp_mode = INTERPOLATION_MODES[cfg.INPUT.INTERPOLATION]
+        to_tensor = []
+        to_tensor += [T.Resize(cfg.INPUT.SIZE, interpolation=interp_mode)]
+        to_tensor += [T.ToTensor()]
+        if "normalize" in cfg.INPUT.TRANSFORMS:
+            normalize = T.Normalize(
+                mean=cfg.INPUT.PIXEL_MEAN, std=cfg.INPUT.PIXEL_STD
+            )
+            to_tensor += [normalize]
+        self.to_tensor = T.Compose(to_tensor)
+
+    def __len__(self):
+        return len(self.data_source)
+
+    def __getitem__(self, idx):
+        item = self.data_source[idx]
+        if isinstance(item, Datum):
+            output = {
+                "label": item.label,
+                "domain": item.domain,
+                "impath": item.impath,
+                "index": idx
+            }
+
+            img0 = read_image(item.impath)
+
+            if self.transform is not None:
+                if isinstance(self.transform, (list, tuple)):
+                    for i, tfm in enumerate(self.transform):
+                        img = self._transform_image(tfm, img0)
+                        keyname = "img"
+                        if (i + 1) > 1:
+                            keyname += str(i + 1)
+                        output[keyname] = img
+                else:
+                    img = self._transform_image(self.transform, img0)
+                    output["img"] = img
+            else:
+                output["img"] = img0
+
+            if self.return_img0:
+                output["img0"] = self.to_tensor(img0)  # without any augmentation
+        else:
+            output = {
+                "label": item["label"],
+                "index": idx,
+                "img": item["img"],
+            }
+
+        return output
+
+    def _transform_image(self, tfm, img0):
+        img_list = []
+
+        for k in range(self.k_tfm):
+            img_list.append(tfm(img0))
+
+        img = img_list
+        if len(img) == 1:
+            img = img[0]
+
+        return img
+
